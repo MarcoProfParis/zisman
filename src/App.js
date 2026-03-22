@@ -150,35 +150,75 @@ function lineFrom2(p1, p2) {
 
 // ── Role Popup ────────────────────────────────────────────────────────────────
 function RolePopup({ onSelect }) {
-  const [step, setStep] = useState("choose");
-  const [pwd, setPwd]   = useState("");
-  const [err, setErr]   = useState(false);
-  const inputRef = useRef(null);
-  useEffect(() => { if (step==="password") setTimeout(()=>inputRef.current?.focus(),50); }, [step]);
+  const [step, setStep]   = useState("choose"); // choose | password | eleve_info
+  const [pwd, setPwd]     = useState("");
+  const [err, setErr]     = useState(false);
+  const [nom, setNom]     = useState("");
+  const [prof, setProf]   = useState("");
+  const [infoErr, setInfoErr] = useState(false);
+  const inputRef  = useRef(null);
+  const nomRef    = useRef(null);
+
+  useEffect(() => {
+    if (step==="password")   setTimeout(()=>inputRef.current?.focus(), 50);
+    if (step==="eleve_info") setTimeout(()=>nomRef.current?.focus(), 50);
+  }, [step]);
+
   const tryPwd = () => {
-    if (pwd==="Admin2026!") onSelect("prof");
-    else { setErr(true); setPwd(""); setTimeout(()=>setErr(false),2000); }
+    if (pwd==="Admin2026!") onSelect("prof", {});
+    else { setErr(true); setPwd(""); setTimeout(()=>setErr(false), 2000); }
   };
+  const tryInfo = () => {
+    if (!nom.trim() || !prof.trim()) { setInfoErr(true); setTimeout(()=>setInfoErr(false), 2000); return; }
+    onSelect("eleve", { nom: nom.trim(), prof: prof.trim() });
+  };
+
+  const inputStyle = (hasErr) => ({
+    width:"100%", padding:"12px 14px", borderRadius:8,
+    border:`2px solid ${hasErr?"#dc2626":C.border}`,
+    fontFamily:F, fontSize:14, fontWeight:600, color:C.text,
+    background: hasErr?"#fee2e2":C.bg,
+    outline:"none", marginBottom:12, boxSizing:"border-box",
+  });
+
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(13,17,23,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}}>
-      <div style={{background:C.surface,borderRadius:16,padding:"36px 40px",width:380,fontFamily:F}}>
+      <div style={{background:C.surface,borderRadius:16,padding:"36px 40px",width:400,fontFamily:F}}>
+
         {step==="choose" && <>
           <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:1.5,textTransform:"uppercase",marginBottom:6}}>BTS Métiers de la Chimie · Mouillage</div>
           <div style={{fontSize:22,fontWeight:900,color:C.text,marginBottom:6}}>Droite de Zisman</div>
           <div style={{fontSize:14,fontWeight:600,color:C.muted,marginBottom:28,lineHeight:1.5}}>Choisissez votre profil pour accéder à l'application.</div>
           <div style={{display:"flex",gap:12}}>
             <button onClick={()=>setStep("password")} style={{flex:1,padding:"16px 0",borderRadius:10,border:`2px solid ${C.accent}`,background:C.accent,color:"#fff",fontFamily:F,fontSize:15,fontWeight:900,cursor:"pointer"}}>Je suis Prof</button>
-            <button onClick={()=>onSelect("eleve")} style={{flex:1,padding:"16px 0",borderRadius:10,border:`2px solid ${C.green}`,background:C.green,color:"#fff",fontFamily:F,fontSize:15,fontWeight:900,cursor:"pointer"}}>Je suis Élève</button>
+            <button onClick={()=>setStep("eleve_info")} style={{flex:1,padding:"16px 0",borderRadius:10,border:`2px solid ${C.green}`,background:C.green,color:"#fff",fontFamily:F,fontSize:15,fontWeight:900,cursor:"pointer"}}>Je suis Élève</button>
           </div>
         </>}
+
         {step==="password" && <>
           <button onClick={()=>{setStep("choose");setPwd("");setErr(false);}} style={{fontSize:12,fontWeight:700,color:C.muted,background:"none",border:"none",cursor:"pointer",padding:0,marginBottom:16,fontFamily:F}}>← Retour</button>
           <div style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:6}}>Accès professeur</div>
           <div style={{fontSize:13,fontWeight:600,color:C.muted,marginBottom:20}}>Entrez le mot de passe pour continuer.</div>
-          <input ref={inputRef} type="password" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>e.key==="Enter"&&tryPwd()} placeholder="Mot de passe"
-            style={{width:"100%",padding:"12px 14px",borderRadius:8,border:`2px solid ${err?"#dc2626":C.border}`,fontFamily:F,fontSize:14,fontWeight:600,color:C.text,background:err?"#fee2e2":C.bg,outline:"none",marginBottom:10,boxSizing:"border-box"}} />
+          <input ref={inputRef} type="password" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>e.key==="Enter"&&tryPwd()} placeholder="Mot de passe" style={inputStyle(err)}/>
           {err && <div style={{fontSize:12,fontWeight:700,color:C.red,marginBottom:10}}>Mot de passe incorrect.</div>}
           <button onClick={tryPwd} style={{width:"100%",padding:"13px 0",borderRadius:8,border:`2px solid ${C.accent}`,background:C.accent,color:"#fff",fontFamily:F,fontSize:14,fontWeight:900,cursor:"pointer"}}>Valider</button>
+        </>}
+
+        {step==="eleve_info" && <>
+          <button onClick={()=>{setStep("choose");setNom("");setProf("");setInfoErr(false);}} style={{fontSize:12,fontWeight:700,color:C.muted,background:"none",border:"none",cursor:"pointer",padding:0,marginBottom:16,fontFamily:F}}>← Retour</button>
+          <div style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:4}}>Identification élève</div>
+          <div style={{fontSize:13,fontWeight:600,color:C.muted,marginBottom:20,lineHeight:1.5}}>Ces informations apparaîtront dans vos résultats exportés.</div>
+
+          <label style={{fontSize:12,fontWeight:800,color:C.muted,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:6}}>Votre nom</label>
+          <input ref={nomRef} type="text" value={nom} onChange={e=>setNom(e.target.value)} onKeyDown={e=>e.key==="Enter"&&profRef?.current?.focus()} placeholder="ex : Marie Dupont" style={inputStyle(infoErr&&!nom.trim())}/>
+
+          <label style={{fontSize:12,fontWeight:800,color:C.muted,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:6}}>Nom de votre professeur</label>
+          <input type="text" value={prof} onChange={e=>setProf(e.target.value)} onKeyDown={e=>e.key==="Enter"&&tryInfo()} placeholder="ex : M. Martin" style={inputStyle(infoErr&&!prof.trim())}/>
+
+          {infoErr && <div style={{fontSize:12,fontWeight:700,color:C.red,marginBottom:10}}>Veuillez remplir les deux champs.</div>}
+          <button onClick={tryInfo} style={{width:"100%",padding:"13px 0",borderRadius:8,border:`2px solid ${C.green}`,background:C.green,color:"#fff",fontFamily:F,fontSize:14,fontWeight:900,cursor:"pointer",marginTop:4}}>
+            Commencer →
+          </button>
         </>}
       </div>
     </div>
@@ -215,6 +255,7 @@ function AddPointRow({ mat, onAdd }) {
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function ZismanApp() {
   const [role,          setRole]          = useState(null);
+  const [eleveInfo,     setEleveInfo]     = useState({ nom: "", prof: "" }); // student identity
   const [materials,     setMaterials]     = useState(MATERIALS_PROF);
   const [mat,           setMat]           = useState(MATERIALS_PROF[0]);
   const [mode,          setMode]          = useState("idle");
@@ -312,42 +353,15 @@ export default function ZismanApp() {
   };
 
   // Student: export all results
-const WEBHOOK_URL = "https://n8n.srv757556.hstgr.cloud/webhook/zisman_results"; // <-- replace with your actual webhook URL
-
-const handleFinish = async () => {
-  const all = Object.values(eleveResults);
-  if (all.length === 0) return;
-
-  // Export CSV local
-  downloadFile(resultsToCSV(all), "zisman_resultats_complets.csv");
-
-  // Payload envoyé au webhook
-  const payload = {
-    date: new Date().toLocaleString("fr-FR"),
-    nbSubstrats: all.length,
-    resultats: all.map(r => ({
-      substrat:     r.matName,
-      gc_theorique: r.gcTheo,
-      gc_eleve:     r.gcEleve,
-      ecart_pct:    r.errPct,
-      statut:       r.statut,
-      nb_points:    r.nbPts,
-    })),
+  const handleFinish = async () => {
+    const all = Object.values(eleveResults);
+    if (all.length === 0) return;
+    const filename = `zisman_${eleveInfo.nom.replace(/\s+/g,"_")}_resultats.csv`;
+    // Add student info header to CSV
+    const csvHeader = `# Élève: ${eleveInfo.nom} | Professeur: ${eleveInfo.prof} | Date: ${new Date().toLocaleString("fr-FR")}\n`;
+    downloadFile(csvHeader + resultsToCSV(all), filename);
+    setShowFinish(true);
   };
-
-  try {
-    const res = await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) console.error("Webhook HTTP error:", res.status);
-  } catch (err) {
-    console.error("Webhook unreachable:", err);
-  }
-
-  setShowFinish(true);
-};
 
   const handleCSVImport = (e) => {
     const file=e.target.files?.[0]; if(!file) return; setCsvError(null);
@@ -442,7 +456,7 @@ const handleFinish = async () => {
 
   return (
     <div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:F}}>
-      {!role && <RolePopup onSelect={setRole}/>}
+      {!role && <RolePopup onSelect={(r, info) => { setRole(r); if (r==="eleve") setEleveInfo(info); }}/>}
 
       {/* Finish overlay for student */}
       {showFinish && (
@@ -451,8 +465,9 @@ const handleFinish = async () => {
             <div style={{fontSize:40,marginBottom:12}}>🎉</div>
             <div style={{fontSize:22,fontWeight:900,color:C.text,marginBottom:8}}>Travail terminé !</div>
             <div style={{fontSize:14,fontWeight:600,color:C.muted,marginBottom:20,lineHeight:1.6}}>
-              Votre fichier CSV de résultats a été téléchargé.<br/>
-              <strong style={{color:C.green}}>{nDone}</strong> substrat{nDone>1?"s":""} analysé{nDone>1?"s":""}.
+              Élève : <strong style={{color:C.text}}>{eleveInfo.nom}</strong><br/>
+              Professeur : <strong style={{color:C.text}}>{eleveInfo.prof}</strong><br/>
+              <strong style={{color:C.green}}>{nDone}</strong> substrat{nDone>1?"s":""} analysé{nDone>1?"s":""}. Fichier CSV téléchargé.
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {Object.values(eleveResults).map(r=>(
@@ -475,7 +490,7 @@ const handleFinish = async () => {
           <div style={{fontSize:12,fontWeight:700,color:C.muted,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>BTS Métiers de la Chimie · Mouillage</div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{fontSize:24,fontWeight:900,color:C.text}}>Droite de Zisman</div>
-            {role && <span style={{fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:99,background:isProf?C.accent+"22":C.green+"22",color:isProf?C.accent:C.green,border:`1px solid ${isProf?C.accent:C.green}`}}>{isProf?"Professeur":"Élève"}</span>}
+            {role && <span style={{fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:99,background:isProf?C.accent+"22":C.green+"22",color:isProf?C.accent:C.green,border:`1px solid ${isProf?C.accent:C.green}`}}>{isProf?"Professeur":`Élève — ${eleveInfo.nom}`}</span>}
             {isEleve && nDone>0 && <span style={{fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:99,background:C.amber+"22",color:C.amber,border:`1px solid ${C.amber}`}}>{nDone}/{nTotal} validés</span>}
           </div>
         </div>
