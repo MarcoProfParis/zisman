@@ -235,6 +235,7 @@ export default function ZismanApp() {
   // Student results: { [matName]: { gcEleve, gcTheo, errPct, nbPts, statut, liquids } }
   const [eleveResults,  setEleveResults]  = useState({});
   const [showFinish,    setShowFinish]    = useState(false);
+  const [showInfo,      setShowInfo]      = useState(false);
   const svgRef  = useRef(null);
   const fileRef = useRef(null);
 
@@ -468,12 +469,40 @@ export default function ZismanApp() {
         </div>
       </div>
 
+      {/* Info popup for students */}
+      {showInfo && (
+        <div style={{position:"fixed",inset:0,background:"rgba(13,17,23,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999}} onClick={()=>setShowInfo(false)}>
+          <div style={{background:C.surface,borderRadius:16,padding:"32px 36px",width:480,maxWidth:"90vw",fontFamily:F}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:18,fontWeight:900,color:C.text,marginBottom:16}}>Comment tracer la droite de Zisman ?</div>
+            {[
+              {n:"1",color:C.amber,title:"Saisir vos mesures",text:"Dans le tableau en bas, choisissez un solvant dans le menu déroulant, entrez l'angle de contact θ mesuré expérimentalement, puis cliquez « Ajouter ». Répétez pour chaque liquide testé (minimum 3 points conseillés)."},
+              {n:"2",color:C.accent,title:"Tracer la droite",text:"Cliquez « Tracer la droite », puis cliquez une première fois sur le graphe pour poser le premier point. Déplacez la souris pour orienter la droite de façon à ce qu'elle passe au mieux par l'ensemble des points. Cliquez une seconde fois pour la fixer."},
+              {n:"3",color:C.green,title:"Déterminer γc",text:"Cliquez « Valider — afficher γc ». La droite est prolongée jusqu'à cos θ = 1 : le point d'intersection donne la tension critique γc du substrat."},
+              {n:"4",color:"#be185d",title:"Valider définitivement",text:"Si vous êtes satisfait de votre tracé, cliquez « Valider définitivement ce substrat ». Vos résultats sont enregistrés et un CSV est téléchargé. Vous pouvez ensuite passer au substrat suivant."},
+            ].map(s=>(
+              <div key={s.n} style={{display:"flex",gap:12,marginBottom:16,alignItems:"flex-start"}}>
+                <div style={{width:28,height:28,borderRadius:"50%",background:s.color,color:"#fff",fontWeight:900,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{s.n}</div>
+                <div>
+                  <div style={{fontSize:14,fontWeight:800,color:C.text,marginBottom:3}}>{s.title}</div>
+                  <div style={{fontSize:13,fontWeight:600,color:C.muted,lineHeight:1.6}}>{s.text}</div>
+                </div>
+              </div>
+            ))}
+            <button onClick={()=>setShowInfo(false)} style={{marginTop:8,width:"100%",padding:"12px 0",borderRadius:8,border:`2px solid ${C.accent}`,background:C.accent,color:"#fff",fontFamily:F,fontSize:14,fontWeight:900,cursor:"pointer"}}>
+              J'ai compris, commencer !
+            </button>
+          </div>
+        </div>
+      )}
+
+
+
       {csvError && <div style={{background:"#fee2e2",border:"1px solid #dc2626",borderRadius:8,padding:"10px 20px",margin:"12px 20px 0",fontSize:13,fontWeight:700,color:C.red}}>{csvError}</div>}
 
       {/* ── GRAPH ── */}
       {tab==="graph" && (
         <div style={{padding:"20px 20px 40px",maxWidth:1140,margin:"0 auto"}}>
-          <div style={{display:"grid",gridTemplateColumns:"280px 1fr",gap:16,alignItems:"start"}}>
+          <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:16,alignItems:"start"}}>
 
             {/* Left: substrate list */}
             {card(<>
@@ -519,7 +548,11 @@ export default function ZismanApp() {
               <div style={{padding:"11px 16px",borderRadius:8,marginBottom:14,background:b.bg,border:`1.5px solid ${b.bdr}`,fontSize:14,fontWeight:700,color:b.color}}>{b.msg}</div>
 
               {/* Buttons */}
-              <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+              <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+                {/* Info button — always visible for students */}
+                {isEleve && (
+                  <button onClick={()=>setShowInfo(true)} title="Aide — comment tracer la droite ?" style={{width:34,height:34,borderRadius:"50%",border:`2px solid ${C.accent}`,background:C.accent+"18",color:C.accent,fontFamily:F,fontSize:16,fontWeight:900,cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>?</button>
+                )}
                 {!isLockedMat && mode==="idle" && DATA.length>=2 && <Btn label="Tracer la droite" onClick={startDrawing} bg={C.accent} bdr={C.accent}/>}
                 {!isLockedMat && mode==="idle" && DATA.length<2 && <span style={{fontSize:13,fontWeight:700,color:C.amber,padding:"9px 0"}}>Ajoutez au moins 2 points.</span>}
                 {!isLockedMat && (mode==="first_click"||mode==="drawing") && <Btn label="Annuler" onClick={reset} bg="transparent" bdr={C.border} col={C.muted}/>}
