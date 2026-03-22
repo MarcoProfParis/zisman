@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/zisman/static/js/main.bd103702.js",
+    "main.js": "/zisman/static/js/main.ebebb0f8.js",
     "index.html": "/zisman/index.html",
-    "main.bd103702.js.map": "/zisman/static/js/main.bd103702.js.map"
+    "main.ebebb0f8.js.map": "/zisman/static/js/main.ebebb0f8.js.map"
   },
   "entrypoints": [
-    "static/js/main.bd103702.js"
+    "static/js/main.ebebb0f8.js"
   ]
 }
