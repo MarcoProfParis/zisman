@@ -1,0 +1,12 @@
+# Sauvegarder les modifications
+git add .
+git commit -m "update app"
+git push
+
+# Déployer sur GitHub Pages
+npm run deploy
+```
+
+Attendez que vous voyiez `Published` dans le terminal, puis allez sur :
+```
+https://marcoprofparis.github.io/zisman/

@@ -312,12 +312,42 @@ export default function ZismanApp() {
   };
 
   // Student: export all results
-  const handleFinish = () => {
-    const all = Object.values(eleveResults);
-    if (all.length === 0) return;
-    downloadFile(resultsToCSV(all), "zisman_resultats_complets.csv");
-    setShowFinish(true);
+const WEBHOOK_URL = "https://n8n.srv757556.hstgr.cloud/webhook/zisman_results"; // <-- replace with your actual webhook URL
+
+const handleFinish = async () => {
+  const all = Object.values(eleveResults);
+  if (all.length === 0) return;
+
+  // Export CSV local
+  downloadFile(resultsToCSV(all), "zisman_resultats_complets.csv");
+
+  // Payload envoyé au webhook
+  const payload = {
+    date: new Date().toLocaleString("fr-FR"),
+    nbSubstrats: all.length,
+    resultats: all.map(r => ({
+      substrat:     r.matName,
+      gc_theorique: r.gcTheo,
+      gc_eleve:     r.gcEleve,
+      ecart_pct:    r.errPct,
+      statut:       r.statut,
+      nb_points:    r.nbPts,
+    })),
   };
+
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) console.error("Webhook HTTP error:", res.status);
+  } catch (err) {
+    console.error("Webhook unreachable:", err);
+  }
+
+  setShowFinish(true);
+};
 
   const handleCSVImport = (e) => {
     const file=e.target.files?.[0]; if(!file) return; setCsvError(null);
